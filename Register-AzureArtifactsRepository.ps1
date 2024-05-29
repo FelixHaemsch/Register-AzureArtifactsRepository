@@ -18,9 +18,6 @@ param (
 $MinimumPSGetVersion             = [System.Version]::new(2, 2, 4, 1)
 $MinimumPackageManagementVersion = [System.Version]::new(1, 4, 7)
 
-# Line to add to current users Powershell profile to set NUGET_PLUGIN_PATHS environment variable when using Powershell
-$PSProfileAddition = '$Env:NUGET_PLUGIN_PATHS = "$home\.nuget\plugins\netfx\CredentialProvider.Microsoft\CredentialProvider.Microsoft.exe"'
-
 # URL for the Azure Artifacts Credential Provider setup script. More info: https://github.com/microsoft/artifacts-credprovider
 $ArtifactsCredentialProviderScriptUrl = 'https://aka.ms/install-artifacts-credprovider.ps1'
 
@@ -78,25 +75,6 @@ $ArtifactsInstallScript = Invoke-RestMethod $ArtifactsCredentialProviderScriptUr
 
 Write-Host "Installing the Artifacts Credential Provider"
 Invoke-Expression "& {$ArtifactsInstallScript} -AddNetfx"
-
-# If not set: Append a line to the Powershell profile to set the NUGET_PLUGIN_PATHS environment variable in future Powershell sessions
-$AppendProfile = $true
-if (Test-Path $Profile.CurrentUserAllHosts -PathType Leaf) {
-    $Content = Get-Content $Profile.CurrentUserAllHosts
-    
-    if ($Content -contains $PSProfileAddition) {
-        $AppendProfile = $false
-    }
-}
-
-if ($AppendProfile) {
-    Write-Host "Adding the environment variable NUGET_PLUGIN_PATHS to the current user's Powershell profile"
-    $PSProfileAddition | Out-File $profile.CurrentUserAllHosts -Append
-}
-
-# Make sure NUGET_PLUGIN_PATHS is set in the current session
-Write-Host "Setting the environment variable NUGET_PLUGIN_PATHS in the current session"
-$Env:NUGET_PLUGIN_PATHS = "$home\.nuget\plugins\netfx\CredentialProvider.Microsoft\CredentialProvider.Microsoft.exe"
 
 # Set the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS environment variable for the current user
 # TODO: check if there's existing, guard overwrite with ShouldProcess
